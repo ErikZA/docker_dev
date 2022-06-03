@@ -1,0 +1,113 @@
+version: "3.7"
+
+#
+# Servicos primarios
+#
+services:
+  postgres:
+    container_name: postgres
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      # bancos adicionais, configurar os nomes aqui, e nos scripts implementar a criacao do banco
+      KEYCLOAK_DB: "keycloak"
+      FARM_BASE_DB: "farmbase"
+      SCHEDULER_DB: "scheduler"
+    image: postgres:10-alpine
+    healthcheck:
+      test: pg_isready -U postgres -d scheduler # testando pela ultima database do script afim de aguardar pelo container
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    hostname: postgres
+    networks:
+      - compose-network
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data # dados do banco, para nao perder ao parar o compose
+      - ./backup/postgres:/var/lib/postgresql/backup # armazenamento de dumps
+      - ./scripts/postgres/create_db.sh:/docker-entrypoint-initdb.d/10-create-db.sh # criacao dos bancos adicionais
+      - ./scripts/postgres/import_db_dump.sh:/docker-entrypoint-initdb.d/20-import-db-dump.sh # caso tenha algum import de dump, colocar neste script
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 128M
+
+  mongodb:
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_DATABASE: "farm_report_service"
+    image: mongo:4-bionic
+    hostname: mongodb
+    networks:
+      - compose-network
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    volumes:
+      - ./data/mongodb:/data/db
+      - ./backup/mongodb:/data/bkp
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 128M
+
+  rabbitmq:
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin@admin.com
+      - RABBITMQ_DEFAULT_PASS=admin
+    image: rabbitmq:3-management-alpine
+    hostname: rabbitmq
+    networks:
+      - compose-network
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+        reservations:
+          memory: 128M
+
+  redis:
+    container_name: redis
+    image: redis:6-alpine
+    hostname: redis
+    networks:
+      - compose-network
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 12M
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "16549:80"
+    depends_on:
+      - postgres
+    networks:
+      - compose-network
+
+networks:
+  compose-network:
+    driver: bridge
+    name: compose-network
