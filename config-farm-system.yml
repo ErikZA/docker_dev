@@ -1,0 +1,86 @@
+version: "3.7"
+
+#
+# Services Farm System
+#
+services:
+  gateway-service:
+    container_name: gateway-service
+    build:
+      context: ./../gateway-service/
+      dockerfile: deploy/Dockerfile
+      network: host # necessario para o frontend enxergar o servico
+    working_dir: /app
+    image: farm-system/gateway-service:latest
+    hostname: gateway-service
+    networks:
+      - compose-network
+    ports:
+      - "8080:8080"
+    environment:
+      - ""
+    healthcheck:
+      test: "wget -nv -q http://localhost:8080/actuator/health -O - | grep UP || exit 1"
+      interval: 10s
+      timeout: 15s
+      retries: 15
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+        reservations:
+          memory: 128M
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: ./../enterprise-auth-service/
+      dockerfile: deploy/Dockerfile
+    working_dir: /app
+    image: farm-system/auth-service:latest
+    hostname: auth-service
+    networks:
+      - compose-network
+    ports:
+      - "8084:8084"
+    environment:
+      - ""
+    healthcheck:
+      test: "wget -nv -q http://localhost:8084/auth-service/actuator/health -O - | grep UP || exit 1"
+      interval: 10s
+      timeout: 15s
+      retries: 15
+      start_period: 15s
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+        reservations:
+          memory: 128M
+
+  enterprise-api:
+    container_name: enterprise-api
+    build:
+      context: ./../farm-system-enterprise-api/
+      dockerfile: deploy/Dockerfile
+    working_dir: /app
+    image: farm-system/enterprise-api:latest
+    hostname: enterprise-api
+    networks:
+      - compose-network
+    ports:
+      - "8088:8088"
+    environment:
+      - ""
+    depends_on:
+      auth-service:
+        condition: service_healthy
+
+networks:
+  compose-network:
+    external: true
+    name: compose-network
