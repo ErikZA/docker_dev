@@ -1,0 +1,52 @@
+version: "3.7"
+
+#
+# Servicos primarios, dependentes dos servicos presentes no compose `config-essential-1.yml`
+#
+services:
+  keycloak:
+    command: [
+        "-b 0.0.0.0",
+        "-Djboss.socket.binding.port-offset=100",
+        "-Dkeycloak.profile.feature.docker=enabled",
+        "-Dkeycloak.profile.feature.upload_scripts=enabled",
+        # usar um ou outro dos comandos abaixo
+        "-Dkeycloak.migration.strategy=IGNORE_EXISTING",
+        # usar para recriar o banco do keycloak
+        # "-Dkeycloak.migration.strategy=OVERWRITE_EXISTING",
+      ]
+    container_name: keycloak
+    environment:
+      KEYCLOAK_FRONTEND_URL: ""
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      DB_DATABASE: "keycloak"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_ADDR: postgres
+      DB_VENDOR: "postgres"
+    image: jboss/keycloak:13.0.1
+    hostname: keycloak
+    networks:
+      - compose-network
+    ports:
+      - "8180:8180"
+    restart: unless-stopped
+    healthcheck:
+      test: "curl -f http://localhost:8180/auth/realms/master || exit 1"
+      interval: 10s
+      timeout: 15s
+      retries: 15
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 600M
+        reservations:
+          memory: 128M
+
+networks:
+  compose-network:
+    external: true
+    name: compose-network
+
