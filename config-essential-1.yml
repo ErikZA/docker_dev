@@ -11,6 +11,7 @@ services:
       POSTGRES_PASSWORD: "postgres"
       # bancos adicionais, configurar os nomes aqui, e nos scripts implementar a criacao do banco
       KEYCLOAK_DB: "keycloak"
+      KONG_DB: "kong"
       FARM_BASE_DB: "farmbase"
       SCHEDULER_DB: "scheduler"
     image: postgres:10-alpine

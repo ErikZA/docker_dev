@@ -1,0 +1,108 @@
+version: "3.7"
+
+#
+# Servicos primarios, dependentes dos servicos presentes no compose `config-essential-1.yml`
+#
+volumes:
+  kong_data: {}
+
+networks:
+  compose-network:
+    external: true
+    name: compose-network
+
+services:
+  kong-migrations:
+    image: "kong:2.3.2-alpine"
+    command: kong migrations bootstrap
+    container_name: kong-migrations
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_DATABASE: kong
+      KONG_PG_HOST: postgres
+      KONG_PG_USER: postgres
+      KONG_PG_PASSWORD: postgres
+    networks:
+      - compose-network
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  kong-migrations-up:
+    image: "kong:2.3.2-alpine"
+    command: kong migrations up && kong migrations finish
+    container_name: kong-migrations-up
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_DATABASE: kong
+      KONG_PG_HOST: postgres
+      KONG_PG_USER: postgres
+      KONG_PG_PASSWORD: postgres
+    networks:
+      - compose-network
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  kong:
+    image: "kong:2.3.2-alpine"
+    user: "kong"
+    container_name: kong
+    environment:
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_CASSANDRA_CONTACT_POINTS: postgres
+      KONG_DATABASE: postgres
+      KONG_PG_DATABASE: kong
+      KONG_PG_HOST: postgres
+      KONG_PG_USER: postgres
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PG_PASSWORD: postgres
+
+    networks:
+      - compose-network
+    ports:
+      - "8000:8000/tcp"
+      - "127.0.0.1:8001:8001/tcp"
+      - "8443:8443/tcp"
+      - "127.0.0.1:8444:8444/tcp"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  konga-prepare:
+    container_name: konga-prepare
+    image: pantsel/konga:latest
+    command: "-c prepare -a postgres -u postgresql://postgres:postgres@postgres:5432/konga_db"
+    container_name:  konga-prepare
+    networks:
+      - compose-network
+    restart: on-failure
+
+  konga:
+    container_name: konga
+    image: pantsel/konga:latest
+    restart: always
+    networks:
+      - compose-network
+    container_name:  konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      TOKEN_SECRET: ahfdjgjgf79JKLFHJKh978953kgdfjkl
+      DB_DATABASE: konga_db
+      NODE_ENV: production
+    ports:
+      - "1337:1337"

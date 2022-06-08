@@ -12,3 +12,6 @@ set -e
 
 # echo "Importing dump for database: ${SCHEDULER_DB}"
 # pg_restore --clean --if-exists --no-owner --no-privileges --username=$POSTGRES_USER --dbname=$SCHEDULER_DB /var/lib/postgresql/backup/scheduler.dump
+
+# echo "Importing dump for database: ${KONG_DB}"
+# pg_restore --clean --if-exists --no-owner --no-privileges --username=$POSTGRES_USER --dbname=$KONG_DB /var/lib/postgresql/backup/scheduler.dump
