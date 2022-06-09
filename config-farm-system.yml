@@ -32,14 +32,14 @@ services:
         reservations:
           memory: 128M
 
-  # data-service:
-  #     container_name: data-service
+  # farm-base:
+  #     container_name: farm-base
   #     build:
-  #       context: ./../data-service/
+  #       context: ./../farm-base/
   #       dockerfile: deploy/Dockerfile
   #     working_dir: /app
-  #     image: farm-system/data-service:latest
-  #     hostname: data-service
+  #     image: farm-system/farm-base:latest
+  #     hostname: farm-base
   #     networks:
   #       - compose-network
   #     ports:
@@ -47,7 +47,7 @@ services:
   #     environment:
   #       - ""
   #     healthcheck:
-  #       test: "wget -nv -q http://localhost:8083/data-service/actuator/health -O - | grep UP || exit 1"
+  #       test: "wget -nv -q http://localhost:8083/farm-base/actuator/health -O - | grep UP || exit 1"
   #       interval: 10s
   #       timeout: 15s
   #       retries: 35
@@ -110,7 +110,7 @@ services:
   #     auth-service:
   #       condition: service_healthy
 
-networks:
-  compose-network:
-    external: true
-    name: compose-network
+  networks:
+    compose-network:
+      external: true
+      name: compose-network

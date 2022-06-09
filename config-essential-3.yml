@@ -1,7 +1,7 @@
 version: "3.7"
 
 #
-# Servicos primarios, dependentes dos servicos presentes no compose `config-essential-1.yml`
+# Servicos primarios, dependentes dos servicos presentes no compose `config-essential-2.yml`
 #
 volumes:
   kong_data: {}
@@ -47,9 +47,11 @@ services:
         condition: on-failure
 
   kong:
-    image: "kong:2.3.2-alpine"
     user: "kong"
     container_name: kong
+    build:
+      context: kong/
+      dockerfile: Dockerfile
     environment:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ERROR_LOG: /dev/stderr
@@ -59,6 +61,7 @@ services:
       KONG_PG_DATABASE: kong
       KONG_PG_HOST: postgres
       KONG_PG_USER: postgres
+      KONG_PLUGINS: bundled,oidc,jwt-keycloak
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_PG_PASSWORD: postgres
