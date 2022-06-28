@@ -18,8 +18,8 @@ services:
     container_name: keycloak
     environment:
       KEYCLOAK_FRONTEND_URL: ""
-      KEYCLOAK_USER: admin
-      KEYCLOAK_PASSWORD: admin
+      # KEYCLOAK_USER: admin
+      # KEYCLOAK_PASSWORD: admin
       DB_DATABASE: "keycloak"
       DB_USER: "postgres"
       DB_PASSWORD: "postgres"
@@ -49,4 +49,3 @@ networks:
   compose-network:
     external: true
     name: compose-network
-

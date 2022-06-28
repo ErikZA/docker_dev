@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "kong-protos/google/api/http.proto";
+
+package state;
+
+
+service StateService {
+    rpc Create(StateRequest) returns (StateResponse) {
+      option (google.api.http) = {
+        post: "/v1/messages"
+        body: "*"
+      };
+    };
+    rpc FindAll(google.protobuf.Empty) returns (StatesResponse) {
+      option (google.api.http) = {
+        get: "/v1/messages"
+      };
+    }
+}
+
+message StateRequest {
+    string name = 1;
+    string initials = 2;
+}
+
+message StateResponse{
+    string id = 1;
+    string name = 2;
+    string initials = 3;
+}
+
+message StatesResponse{
+    repeated StateResponse data = 1;
+}

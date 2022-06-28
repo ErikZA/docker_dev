@@ -109,6 +109,14 @@ services:
     networks:
       - compose-network
 
+  grpc-test:
+    container_name: grpc-test
+    image: gusaul/grpcox:latest
+    ports:
+      - 6969:6969
+    networks:
+      - compose-network
+
 networks:
   compose-network:
     driver: bridge
